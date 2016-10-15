@@ -11,6 +11,7 @@ $().ready ->
 init = ->
   initGraph()
   initTimes()
+  initOther()
 
   play()
 
@@ -86,19 +87,31 @@ sumHigh = (ary, num)->
 refreshTotal = ->
   # 回数
   $('.times').each ->
-    $(@).html window.times[$(@).data('id')]
+    id = $(@).data('id')
+    if id is 'total'
+      $(@).html Utl.arraySum window.times
+    else
+      $(@).html window.times[id]
 
   # 割合
   totalTime = Utl.arraySum window.times
   $('.persent').each ->
-    persent = window.times[$(@).data('id')] / totalTime * 100
-    persent = Math.round(persent * 1000000) / 1000000
+    id = $(@).data('id')
+    return if id is 'total'
+
+    persent = window.times[id] / totalTime * 100
+    persent = Math.round(persent * 1000) / 1000
     $(@).html ''+persent+'%'
 
   # グラフ
   maxTime = Utl.arrayMax window.times
   $('.graph').each ->
-    $(@).css('width', window.CONST_MAX_GRAPH_WIDTH * window.times[$(@).data('id')] / maxTime)
+    id = $(@).data('id')
+    return if id is 'total'
+
+    widthWariai = window.times[id] / maxTime
+    width = ''+(100 * widthWariai)+'%'
+    $(@).css('width', width)
 
 
 addHistory = (hash)->
@@ -114,35 +127,27 @@ addHistory = (hash)->
   tr = $('<tr>')
   for record in hash.history
     [n, isHigh, p] = record
+
+    if isHigh isnt null and p isnt null
+      isHighStr = switch isHigh
+        when true then 'High'
+        when false then 'Low'
+        else ''
+      pStr = if p isnt null then Math.round(p*1000)/10 else ''
+      tr.append(
+        $('<td>').html(
+          '<strong>'+isHighStr+'</strong><br>'+
+          '→<br>'+
+          '<small>'+pStr+'%</small>'
+        ).addClass('center')
+      )
+
     tr.append(
       $('<td>').append(
         $('<img>').attr('src', n2filename(n)).addClass('history_trump')
       )
     )
-  table.append tr
-  # 選択列
-  tr = $('<tr>')
-  for record in hash.history
-    [n, isHigh, p] = record
-    str = ''
-    if isHigh is true
-      str = 'High'
-    else if isHigh is false
-      str = 'Low'
-    tr.append(
-      $('<td>').html(str)
-    )
-  table.append tr
-  # 確率列
-  tr = $('<tr>')
-  for record in hash.history
-    [n, isHigh, p] = record
-    str = ''
-    if p isnt null
-      str = ''+(Math.round((p * 100) * 10)/10)+'%'
-    tr.append(
-      $('<td>').html(str)
-    )
+
   table.append tr
 
   historyTr.append table
@@ -151,6 +156,9 @@ addHistory = (hash)->
 
   if window.CONST_HISTORY_COUNT isnt null
     $('#history>tbody>tr:gt('+(window.CONST_HISTORY_COUNT+2)+')').remove()
+
+initOther = ->
+  $('#history_ok_min').html window.CONST_HISTORY_OK_MIN
 
 initTimes = ->
   window.times = Utl.arrayFill 54, 0
@@ -169,9 +177,21 @@ initGraph = ->
 
   $('#result').append(tr)
 
+  tr = $('<tr>').append(
+    $('<th>').html('合計').addClass('title')
+  ).append(
+    $('<td>').addClass('times').data('id', 'total')
+  ).append(
+    $('<td>').addClass('persent').data('id', 'total')
+  ).append(
+    $('<td>').addClass('graph_cell')
+  )
+
+  $('#result').append(tr)
+
   for index in [0..53]
     tr = $('<tr>').append(
-      $('<th>').html(index)
+      $('<th>').html(index).addClass('title')
     ).append(
       $('<td>').addClass('times').data('id', index)
     ).append(
@@ -179,7 +199,7 @@ initGraph = ->
     ).append(
       $('<td>').append(
         $('<img>').attr('src', 'img/graph.png').addClass('graph').data('id', index)
-      )
+      ).addClass('graph_cell')
     )
 
     $('#result').append(tr)

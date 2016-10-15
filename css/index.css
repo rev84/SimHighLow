@@ -1,6 +1,9 @@
 .graph {
   height: 10px;
 }
+#result {
+  max-width: 700px;
+}
 .times {
   text-align: right;
 }
@@ -8,5 +11,20 @@
   text-align: right;
 }
 .history_trump {
-  height: 50px;
+  height: 60px;
+}
+.center {
+  text-align: center;
+}
+.title {
+  width: 15%;
+}
+.times {
+  width: 15%;
+}
+.persent {
+  width: 30%;
+}
+.graph_cell {
+  width: 40%;
 }
